@@ -14,53 +14,15 @@ class TelaJogo:
         self.offset_x = 0
         self.offset_y = 0
         
-        # Carregar Sprites
+        # Armazenar caminho dos assets
         base_path = os.path.dirname(__file__)
-        assets_path = os.path.join(base_path, '..', 'assets')
+        self.assets_path = os.path.join(base_path, '..', 'assets')
         
-        def load_sprite_proportional(filename, full_cell=False, size_multiplier=1.0):
-            """Carrega e redimensiona sprite mantendo proporção"""
-            try:
-                img = pygame.image.load(os.path.join(assets_path, filename)).convert_alpha()
-                
-                img_width, img_height = img.get_size()
-                
-                if full_cell:
-                    # Escala para preencher toda a célula (pode cortar excesso)
-                    scale = max(TAMANHO_CELULA / img_width, TAMANHO_CELULA / img_height)
-                else:
-                    # Escala para caber dentro (com margem)
-                    scale = min(TAMANHO_CELULA / img_width, TAMANHO_CELULA / img_height) * 0.8
-                
-                # Aplicar multiplicador de tamanho
-                scale *= size_multiplier
-                
-                new_width = int(img_width * scale)
-                new_height = int(img_height * scale)
-                
-                scaled_img = pygame.transform.smoothscale(img, (new_width, new_height))
-                
-                # Criar superfície transparente do tamanho da célula
-                surface = pygame.Surface((TAMANHO_CELULA, TAMANHO_CELULA), pygame.SRCALPHA)
-                
-                # Centralizar imagem na superfície
-                x_offset = (TAMANHO_CELULA - new_width) // 2
-                y_offset = (TAMANHO_CELULA - new_height) // 2
-                surface.blit(scaled_img, (x_offset, y_offset))
-                
-                return surface
-            except Exception as e:
-                print(f"Erro ao carregar {filename}: {e}")
-                # Fallback
-                fallback = pygame.Surface((TAMANHO_CELULA, TAMANHO_CELULA))
-                fallback.fill(COR_PAREDE if full_cell else COR_AGENTE)
-                return fallback
-        
-        # Carregar sprites com multiplicadores independentes
-        self.sprite_objetivo = load_sprite_proportional('eve_nanobanana.png', size_multiplier=1.5)
-        self.sprite_simples = load_sprite_proportional('walle_triste.png', size_multiplier=1.5)
-        self.sprite_parede = load_sprite_proportional('parede.png', full_cell=True)
-        self.sprite_sujeira = load_sprite_proportional('poeira.png')
+        # Sprites serão carregados em configurar()
+        self.sprite_objetivo = None
+        self.sprite_simples = None
+        self.sprite_parede = None
+        self.sprite_sujeira = None
 
         # Estado de Animação
         self.pos_visual = (0, 0) # (x, y) em coordenadas do grid (floats)
@@ -73,13 +35,63 @@ class TelaJogo:
         if self.engine.modo == "simples":
             return (0, 0) if pos_logica == "A" else (1, 0)
         return pos_logica
+    
+    def _load_sprites(self, cell_size):
+        """Carrega sprites com o tamanho de célula especificado"""
+        def load_sprite_proportional(filename, full_cell=False, size_multiplier=1.0):
+            try:
+                img = pygame.image.load(os.path.join(self.assets_path, filename)).convert_alpha()
+                img_width, img_height = img.get_size()
+                
+                if full_cell:
+                    scale = max(cell_size / img_width, cell_size / img_height)
+                else:
+                    scale = min(cell_size / img_width, cell_size / img_height) * 0.8
+                
+                scale *= size_multiplier
+                
+                new_width = int(img_width * scale)
+                new_height = int(img_height * scale)
+                
+                scaled_img = pygame.transform.smoothscale(img, (new_width, new_height))
+                surface = pygame.Surface((cell_size, cell_size), pygame.SRCALPHA)
+                
+                x_offset = (cell_size - new_width) // 2
+                y_offset = (cell_size - new_height) // 2
+                surface.blit(scaled_img, (x_offset, y_offset))
+                
+                return surface
+            except Exception as e:
+                print(f"Erro ao carregar {filename}: {e}")
+                fallback = pygame.Surface((cell_size, cell_size))
+                fallback.fill(COR_PAREDE if full_cell else COR_AGENTE)
+                return fallback
+        
+        self.sprite_objetivo = load_sprite_proportional('eve_nanobanana.png', size_multiplier=2.4)
+        self.sprite_simples = load_sprite_proportional('walle_triste.png', size_multiplier=1.5)
+        self.sprite_parede = load_sprite_proportional('parede.png', full_cell=True)
+        self.sprite_sujeira = load_sprite_proportional('poeira.png', size_multiplier=0.8)
 
     def configurar(self, config):
         self.engine = SimulationEngine(config)
         
+        # Definir tamanho de célula baseado no modo
+        self.tamanho_celula = 200 if self.engine.modo == "simples" else TAMANHO_CELULA
+        
+        # Carregar sprites com tamanho correto
+        self._load_sprites(self.tamanho_celula)
+        
+        # Configurar velocidades baseadas no modo
+        if self.engine.modo == "simples":
+            self.DELAY_PASSO = 400  # Mais lento (ms entre ações)
+            self.animation_speed = 0.01  # Deslize moderado
+        else:
+            self.DELAY_PASSO = 150  # Mais rápido
+            self.animation_speed = 0.05  # Deslize mais rápido
+        
         # Recalcular offsets para centralizar
-        grid_largura = self.engine.grid_size[0] * TAMANHO_CELULA
-        grid_altura = self.engine.grid_size[1] * TAMANHO_CELULA
+        grid_largura = self.engine.grid_size[0] * self.tamanho_celula
+        grid_altura = self.engine.grid_size[1] * self.tamanho_celula
         self.offset_x = (LARGURA_TELA - grid_largura) // 2
         self.offset_y = (ALTURA_TELA - grid_altura) // 2
         
@@ -139,10 +151,10 @@ class TelaJogo:
         for x in range(self.engine.grid_size[0]):
             for y in range(self.engine.grid_size[1]):
                 rect = pygame.Rect(
-                    self.offset_x + x * TAMANHO_CELULA,
-                    self.offset_y + y * TAMANHO_CELULA,
-                    TAMANHO_CELULA,
-                    TAMANHO_CELULA
+                    self.offset_x + x * self.tamanho_celula,
+                    self.offset_y + y * self.tamanho_celula,
+                    self.tamanho_celula,
+                    self.tamanho_celula
                 )
                 # Preencher célula com cor de fundo
                 pygame.draw.rect(superficie, COR_CELULA, rect)
@@ -167,8 +179,8 @@ class TelaJogo:
                     superficie.blit(self.sprite_parede, (rect.x, rect.y))
 
         # Desenhar Agente (com posição visual interpolada)
-        pixel_x = self.offset_x + self.pos_visual[0] * TAMANHO_CELULA
-        pixel_y = self.offset_y + self.pos_visual[1] * TAMANHO_CELULA
+        pixel_x = self.offset_x + self.pos_visual[0] * self.tamanho_celula
+        pixel_y = self.offset_y + self.pos_visual[1] * self.tamanho_celula
         
         sprite = self.sprite_simples if self.engine.modo == "simples" else self.sprite_objetivo
         superficie.blit(sprite, (pixel_x, pixel_y))

@@ -11,38 +11,13 @@ class TelaEdicao:
         self.celulas = {} # (x, y) -> tipo ("sujeira", "parede", "vazio")
         self.ferramenta_atual = "sujeira" # "sujeira", "parede"
         
-        # Carregar Sprites (Duplicação de lógica, idealmente moveria para assets_manager)
+        # Armazenar caminho dos assets
         base_path = os.path.dirname(__file__)
-        assets_path = os.path.join(base_path, '..', 'assets')
+        self.assets_path = os.path.join(base_path, '..', 'assets')
         
-        def load_sprite_proportional(filename, full_cell=False):
-            try:
-                img = pygame.image.load(os.path.join(assets_path, filename)).convert_alpha()
-                img_width, img_height = img.get_size()
-                
-                if full_cell:
-                    scale = max(TAMANHO_CELULA / img_width, TAMANHO_CELULA / img_height)
-                else:
-                    scale = min(TAMANHO_CELULA / img_width, TAMANHO_CELULA / img_height) * 0.8
-                
-                new_width = int(img_width * scale)
-                new_height = int(img_height * scale)
-                
-                scaled_img = pygame.transform.smoothscale(img, (new_width, new_height))
-                surface = pygame.Surface((TAMANHO_CELULA, TAMANHO_CELULA), pygame.SRCALPHA)
-                
-                x_offset = (TAMANHO_CELULA - new_width) // 2
-                y_offset = (TAMANHO_CELULA - new_height) // 2
-                surface.blit(scaled_img, (x_offset, y_offset))
-                return surface
-            except Exception as e:
-                print(f"Erro ao carregar {filename}: {e}")
-                fallback = pygame.Surface((TAMANHO_CELULA, TAMANHO_CELULA))
-                fallback.fill(COR_PAREDE if full_cell else COR_SUJEIRA)
-                return fallback
-
-        self.sprite_parede = load_sprite_proportional('parede.png', full_cell=True)
-        self.sprite_sujeira = load_sprite_proportional('poeira.png')
+        # Sprites serão carregados em configurar()
+        self.sprite_parede = None
+        self.sprite_sujeira = None
         
         # UI Elements
         self.btn_comecar = None
@@ -51,6 +26,40 @@ class TelaEdicao:
         
         self.offset_x = 0
         self.offset_y = 0
+    
+    def _load_sprites(self, cell_size):
+        """Carrega sprites com o tamanho de célula especificado"""
+        def load_sprite_proportional(filename, full_cell=False, size_multiplier=1.0):
+            try:
+                img = pygame.image.load(os.path.join(self.assets_path, filename)).convert_alpha()
+                img_width, img_height = img.get_size()
+                
+                if full_cell:
+                    scale = max(cell_size / img_width, cell_size / img_height)
+                else:
+                    scale = min(cell_size / img_width, cell_size / img_height) * 0.8
+                
+                scale *= size_multiplier
+                
+                new_width = int(img_width * scale)
+                new_height = int(img_height * scale)
+                
+                scaled_img = pygame.transform.smoothscale(img, (new_width, new_height))
+                surface = pygame.Surface((cell_size, cell_size), pygame.SRCALPHA)
+                
+                x_offset = (cell_size - new_width) // 2
+                y_offset = (cell_size - new_height) // 2
+                surface.blit(scaled_img, (x_offset, y_offset))
+                
+                return surface
+            except Exception as e:
+                print(f"Erro ao carregar {filename}: {e}")
+                fallback = pygame.Surface((cell_size, cell_size))
+                fallback.fill(COR_PAREDE if full_cell else COR_SUJEIRA)
+                return fallback
+
+        self.sprite_parede = load_sprite_proportional('parede.png', full_cell=True)
+        self.sprite_sujeira = load_sprite_proportional('poeira.png', size_multiplier=0.8)
 
     def configurar(self, modo):
         self.modo = modo
@@ -61,9 +70,15 @@ class TelaEdicao:
             
         self.celulas = {} # Limpa grid
         
+        # Definir tamanho de célula baseado no modo
+        self.tamanho_celula = 200 if modo == "simples" else TAMANHO_CELULA
+        
+        # Carregar sprites com tamanho correto
+        self._load_sprites(self.tamanho_celula)
+        
         # Centralizar Grid
-        grid_largura = self.grid_size[0] * TAMANHO_CELULA
-        grid_altura = self.grid_size[1] * TAMANHO_CELULA
+        grid_largura = self.grid_size[0] * self.tamanho_celula
+        grid_altura = self.grid_size[1] * self.tamanho_celula
         self.offset_x = (LARGURA_TELA - grid_largura) // 2 - 100 # Um pouco para a esquerda para caber menu lateral
         self.offset_y = (ALTURA_TELA - grid_altura) // 2
         
@@ -96,8 +111,8 @@ class TelaEdicao:
                 if evento.button == 1: # Clique esquerdo
                     mx, my = evento.pos
                     # Verificar clique no grid
-                    col = (mx - self.offset_x) // TAMANHO_CELULA
-                    lin = (my - self.offset_y) // TAMANHO_CELULA
+                    col = (mx - self.offset_x) // self.tamanho_celula
+                    lin = (my - self.offset_y) // self.tamanho_celula
                     
                     if 0 <= col < self.grid_size[0] and 0 <= lin < self.grid_size[1]:
                         key = (col, lin)
@@ -117,10 +132,10 @@ class TelaEdicao:
         for x in range(self.grid_size[0]):
             for y in range(self.grid_size[1]):
                 rect = pygame.Rect(
-                    self.offset_x + x * TAMANHO_CELULA,
-                    self.offset_y + y * TAMANHO_CELULA,
-                    TAMANHO_CELULA,
-                    TAMANHO_CELULA
+                    self.offset_x + x * self.tamanho_celula,
+                    self.offset_y + y * self.tamanho_celula,
+                    self.tamanho_celula,
+                    self.tamanho_celula
                 )
                 # Preencher célula com cor de fundo
                 pygame.draw.rect(superficie, COR_CELULA, rect)

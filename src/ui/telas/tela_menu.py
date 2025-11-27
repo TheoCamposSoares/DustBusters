@@ -43,7 +43,7 @@ class TelaMenu:
         superficie.fill(COR_FUNDO)
         
         # Título
-        titulo_surf = self.fonte_titulo.render("Aspirador Inteligente", True, COR_TEXTO)
+        titulo_surf = self.fonte_titulo.render("DustBusters", True, COR_TEXTO)
         titulo_rect = titulo_surf.get_rect(center=(LARGURA_TELA // 2, 150))
         superficie.blit(titulo_surf, titulo_rect)
         
