@@ -9,7 +9,7 @@ class Botao:
         self.cor_hover = cor_hover
         self.cor_texto = cor_texto
         self.acao = acao
-        self.fonte = pygame.font.SysFont(None, 32)
+        self.fonte = get_font(24)
         self.hovered = False
 
     def desenhar(self, superficie):

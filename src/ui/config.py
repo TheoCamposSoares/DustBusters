@@ -18,11 +18,12 @@ AMARELO = (255, 255, 0)
 MARROM = (139, 69, 19) # Para sujeira
 
 # Cores Específicas
-COR_FUNDO = BRANCO
-COR_TEXTO = PRETO
-COR_BOTAO = CINZA_CLARO
-COR_BOTAO_HOVER = CINZA_ESCURO
-COR_GRID_LINHA = PRETO
+COR_FUNDO = (47, 52, 71)  # #2f3447
+COR_TEXTO = (248, 230, 232)  # #f8e6e8
+COR_BOTAO = (148, 111, 145)  # #946f91
+COR_BOTAO_HOVER = (96, 111, 128)  # #606f80
+COR_GRID_LINHA = (73, 74, 75)  # #494a4b
+COR_CELULA = (142, 147, 153)  # #8e9399
 COR_AGENTE = AZUL
 COR_SUJEIRA = MARROM
 COR_PAREDE = PRETO
@@ -36,3 +37,17 @@ ESTADO_MENU = "menu"
 ESTADO_EDICAO = "edicao"
 ESTADO_JOGO = "jogo"
 ESTADO_FIM = "fim"
+
+# Configurações de Fonte
+import os
+_current_dir = os.path.dirname(__file__)
+_font_path = os.path.join(_current_dir, 'assets', 'Orbitron-Regular.ttf')
+
+def get_font(size):
+    """Retorna a fonte Orbitron no tamanho especificado"""
+    try:
+        return pygame.font.Font(_font_path, size)
+    except:
+        print(f"Erro ao carregar fonte Orbitron, usando fonte padrão")
+        return pygame.font.SysFont(None, size)
+

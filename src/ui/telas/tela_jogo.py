@@ -1,4 +1,5 @@
 import pygame
+import os
 from ..config import *
 from ..componentes import Botao
 from ...simulacao.engine import SimulationEngine
@@ -12,6 +13,66 @@ class TelaJogo:
         
         self.offset_x = 0
         self.offset_y = 0
+        
+        # Carregar Sprites
+        base_path = os.path.dirname(__file__)
+        assets_path = os.path.join(base_path, '..', 'assets')
+        
+        def load_sprite_proportional(filename, full_cell=False, size_multiplier=1.0):
+            """Carrega e redimensiona sprite mantendo proporção"""
+            try:
+                img = pygame.image.load(os.path.join(assets_path, filename)).convert_alpha()
+                
+                img_width, img_height = img.get_size()
+                
+                if full_cell:
+                    # Escala para preencher toda a célula (pode cortar excesso)
+                    scale = max(TAMANHO_CELULA / img_width, TAMANHO_CELULA / img_height)
+                else:
+                    # Escala para caber dentro (com margem)
+                    scale = min(TAMANHO_CELULA / img_width, TAMANHO_CELULA / img_height) * 0.8
+                
+                # Aplicar multiplicador de tamanho
+                scale *= size_multiplier
+                
+                new_width = int(img_width * scale)
+                new_height = int(img_height * scale)
+                
+                scaled_img = pygame.transform.smoothscale(img, (new_width, new_height))
+                
+                # Criar superfície transparente do tamanho da célula
+                surface = pygame.Surface((TAMANHO_CELULA, TAMANHO_CELULA), pygame.SRCALPHA)
+                
+                # Centralizar imagem na superfície
+                x_offset = (TAMANHO_CELULA - new_width) // 2
+                y_offset = (TAMANHO_CELULA - new_height) // 2
+                surface.blit(scaled_img, (x_offset, y_offset))
+                
+                return surface
+            except Exception as e:
+                print(f"Erro ao carregar {filename}: {e}")
+                # Fallback
+                fallback = pygame.Surface((TAMANHO_CELULA, TAMANHO_CELULA))
+                fallback.fill(COR_PAREDE if full_cell else COR_AGENTE)
+                return fallback
+        
+        # Carregar sprites com multiplicadores independentes
+        self.sprite_objetivo = load_sprite_proportional('eve_nanobanana.png', size_multiplier=1.5)
+        self.sprite_simples = load_sprite_proportional('walle_triste.png', size_multiplier=1.5)
+        self.sprite_parede = load_sprite_proportional('parede.png', full_cell=True)
+        self.sprite_sujeira = load_sprite_proportional('poeira.png')
+
+        # Estado de Animação
+        self.pos_visual = (0, 0) # (x, y) em coordenadas do grid (floats)
+        self.target_pos = (0, 0)
+        self.animating = False
+        self.animation_speed = 0.05 # Células por frame (ajustar para suavidade)
+
+    def _get_grid_coords(self, pos_logica):
+        """Converte posição lógica (A/B ou x,y) para coordenadas x,y do grid"""
+        if self.engine.modo == "simples":
+            return (0, 0) if pos_logica == "A" else (1, 0)
+        return pos_logica
 
     def configurar(self, config):
         self.engine = SimulationEngine(config)
@@ -22,25 +83,59 @@ class TelaJogo:
         self.offset_x = (LARGURA_TELA - grid_largura) // 2
         self.offset_y = (ALTURA_TELA - grid_altura) // 2
         
+        # Inicializar posição visual
+        start_coords = self._get_grid_coords(self.engine.agente.posicao)
+        self.pos_visual = list(start_coords)
+        self.target_pos = list(start_coords)
+        self.animating = False
+        
         self.timer_passo = pygame.time.get_ticks()
 
     def processar_eventos(self, eventos):
         pass # Usuário apenas assiste
 
     def atualizar(self):
+        # Lógica de Animação
+        if self.animating:
+            dx = self.target_pos[0] - self.pos_visual[0]
+            dy = self.target_pos[1] - self.pos_visual[1]
+            
+            dist = (dx**2 + dy**2)**0.5
+            
+            if dist < self.animation_speed:
+                self.pos_visual = list(self.target_pos)
+                self.animating = False
+            else:
+                self.pos_visual[0] += (dx / dist) * self.animation_speed
+                self.pos_visual[1] += (dy / dist) * self.animation_speed
+            return # Não executa lógica do jogo enquanto anima
+
+        # Lógica do Jogo (só roda se não estiver animando)
         if self.engine.finalizado:
+            # Pequeno delay visual antes de mudar de tela
+            pygame.time.wait(500)
             self.gerenciador.mudar_estado(ESTADO_FIM, passos=self.engine.passos)
             return
 
         agora = pygame.time.get_ticks()
         if agora - self.timer_passo > self.DELAY_PASSO:
             self.timer_passo = agora
+            
+            # Guardar posição antiga
+            old_pos = self.engine.agente.posicao
+            
             self.engine.executar_passo()
+            
+            # Verificar se moveu
+            new_pos = self.engine.agente.posicao
+            if new_pos != old_pos:
+                self.target_pos = self._get_grid_coords(new_pos)
+                self.animating = True
 
     def desenhar(self, superficie):
         superficie.fill(COR_FUNDO)
         
-        # Desenhar Grid e Estado Atual
+        # Desenhar Grid e Itens Estáticos
         for x in range(self.engine.grid_size[0]):
             for y in range(self.engine.grid_size[1]):
                 rect = pygame.Rect(
@@ -49,31 +144,36 @@ class TelaJogo:
                     TAMANHO_CELULA,
                     TAMANHO_CELULA
                 )
+                # Preencher célula com cor de fundo
+                pygame.draw.rect(superficie, COR_CELULA, rect)
+                # Desenhar borda da célula
                 pygame.draw.rect(superficie, COR_GRID_LINHA, rect, 1)
                 
                 is_dirty = False
                 is_wall = False
-                is_agent = False
                 
                 if self.engine.modo == "simples":
                     loc = "A" if x == 0 else "B"
                     is_dirty = self.engine.ambiente.estado_sujeira[loc]
-                    is_agent = (self.engine.agente.posicao == loc)
                 else:
-                    # Modo Grid
                     is_dirty = (x, y) in self.engine.ambiente.sujeiras
                     is_wall = (x, y) in self.engine.ambiente.obstaculos
-                    is_agent = (self.engine.agente.posicao == (x, y))
 
                 if is_dirty:
-                    pygame.draw.circle(superficie, COR_SUJEIRA, rect.center, TAMANHO_CELULA // 4)
+                    # Desenhar sujeira centralizada
+                    superficie.blit(self.sprite_sujeira, (rect.x, rect.y))
                 if is_wall:
-                    pygame.draw.rect(superficie, COR_PAREDE, rect)
-                if is_agent:
-                    # Desenhar agente (círculo azul ou aspirador)
-                    pygame.draw.circle(superficie, COR_AGENTE, rect.center, TAMANHO_CELULA // 3)
+                    # Desenhar parede preenchendo célula
+                    superficie.blit(self.sprite_parede, (rect.x, rect.y))
+
+        # Desenhar Agente (com posição visual interpolada)
+        pixel_x = self.offset_x + self.pos_visual[0] * TAMANHO_CELULA
+        pixel_y = self.offset_y + self.pos_visual[1] * TAMANHO_CELULA
+        
+        sprite = self.sprite_simples if self.engine.modo == "simples" else self.sprite_objetivo
+        superficie.blit(sprite, (pixel_x, pixel_y))
 
         # HUD
-        fonte = pygame.font.SysFont(None, 36)
+        fonte = get_font(36)
         texto_passos = fonte.render(f"Passos: {self.engine.passos}", True, COR_TEXTO)
         superficie.blit(texto_passos, (20, 20))

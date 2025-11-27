@@ -6,7 +6,7 @@ class TelaMenu:
     def __init__(self, gerenciador):
         self.gerenciador = gerenciador
         
-        largura_btn = 400
+        largura_btn = 500
         altura_btn = 60
         centro_x = LARGURA_TELA // 2
         centro_y = ALTURA_TELA // 2
@@ -29,7 +29,7 @@ class TelaMenu:
             acao=lambda: self.gerenciador.mudar_estado(ESTADO_EDICAO, modo="objetivo")
         )
         
-        self.fonte_titulo = pygame.font.SysFont(None, 64)
+        self.fonte_titulo = get_font(64)
 
     def processar_eventos(self, eventos):
         for evento in eventos:

@@ -1,4 +1,5 @@
 import pygame
+import os
 from ..config import *
 from ..componentes import Botao
 
@@ -9,6 +10,39 @@ class TelaEdicao:
         self.grid_size = (0, 0)
         self.celulas = {} # (x, y) -> tipo ("sujeira", "parede", "vazio")
         self.ferramenta_atual = "sujeira" # "sujeira", "parede"
+        
+        # Carregar Sprites (Duplicação de lógica, idealmente moveria para assets_manager)
+        base_path = os.path.dirname(__file__)
+        assets_path = os.path.join(base_path, '..', 'assets')
+        
+        def load_sprite_proportional(filename, full_cell=False):
+            try:
+                img = pygame.image.load(os.path.join(assets_path, filename)).convert_alpha()
+                img_width, img_height = img.get_size()
+                
+                if full_cell:
+                    scale = max(TAMANHO_CELULA / img_width, TAMANHO_CELULA / img_height)
+                else:
+                    scale = min(TAMANHO_CELULA / img_width, TAMANHO_CELULA / img_height) * 0.8
+                
+                new_width = int(img_width * scale)
+                new_height = int(img_height * scale)
+                
+                scaled_img = pygame.transform.smoothscale(img, (new_width, new_height))
+                surface = pygame.Surface((TAMANHO_CELULA, TAMANHO_CELULA), pygame.SRCALPHA)
+                
+                x_offset = (TAMANHO_CELULA - new_width) // 2
+                y_offset = (TAMANHO_CELULA - new_height) // 2
+                surface.blit(scaled_img, (x_offset, y_offset))
+                return surface
+            except Exception as e:
+                print(f"Erro ao carregar {filename}: {e}")
+                fallback = pygame.Surface((TAMANHO_CELULA, TAMANHO_CELULA))
+                fallback.fill(COR_PAREDE if full_cell else COR_SUJEIRA)
+                return fallback
+
+        self.sprite_parede = load_sprite_proportional('parede.png', full_cell=True)
+        self.sprite_sujeira = load_sprite_proportional('poeira.png')
         
         # UI Elements
         self.btn_comecar = None
@@ -88,13 +122,16 @@ class TelaEdicao:
                     TAMANHO_CELULA,
                     TAMANHO_CELULA
                 )
+                # Preencher célula com cor de fundo
+                pygame.draw.rect(superficie, COR_CELULA, rect)
+                # Desenhar borda da célula
                 pygame.draw.rect(superficie, COR_GRID_LINHA, rect, 1)
                 
                 conteudo = self.celulas.get((x, y))
                 if conteudo == "sujeira":
-                    pygame.draw.circle(superficie, COR_SUJEIRA, rect.center, TAMANHO_CELULA // 4)
+                    superficie.blit(self.sprite_sujeira, (rect.x, rect.y))
                 elif conteudo == "parede":
-                    pygame.draw.rect(superficie, COR_PAREDE, rect)
+                    superficie.blit(self.sprite_parede, (rect.x, rect.y))
         
         # UI Lateral
         self.btn_comecar.desenhar(superficie)
@@ -112,6 +149,6 @@ class TelaEdicao:
             self.btn_parede.desenhar(superficie)
             
         # Instruções
-        fonte = pygame.font.SysFont(None, 24)
+        fonte = get_font(24)
         texto = fonte.render(f"Modo: {self.modo.capitalize()} - Clique no grid para editar", True, COR_TEXTO)
         superficie.blit(texto, (20, 20))

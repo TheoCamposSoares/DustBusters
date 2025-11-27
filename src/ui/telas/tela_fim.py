@@ -11,24 +11,24 @@ class TelaFim:
         centro_y = ALTURA_TELA // 2
         
         self.btn_jogar_novamente = Botao(
-            centro_x - 100, 
+            centro_x - 150, 
             centro_y + 50, 
-            200, 
+            300, 
             50, 
             "Jogar Novamente",
             acao=lambda: self.gerenciador.mudar_estado(ESTADO_MENU)
         )
         
         self.btn_sair = Botao(
-            centro_x - 100, 
+            centro_x - 150, 
             centro_y + 120, 
-            200, 
+            300, 
             50, 
             "Sair",
             acao=lambda: self.gerenciador.sair()
         )
         
-        self.fonte_grande = pygame.font.SysFont(None, 64)
+        self.fonte_grande = get_font(64)
 
     def configurar(self, passos):
         self.passos_finais = passos
