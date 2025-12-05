@@ -42,7 +42,7 @@ ESTADO_FIM = "fim"
 import os
 _current_dir = os.path.dirname(__file__)
 _font_path = os.path.join(_current_dir, 'assets', 'Orbitron-Regular.ttf')
-_background_path = os.path.join(_current_dir, 'assets', 'fundodegrade.png')
+_background_path = os.path.join(_current_dir, 'assets', 'background1.png')
 
 def get_font(size):
     """Retorna a fonte Orbitron no tamanho especificado"""
@@ -52,13 +52,40 @@ def get_font(size):
         print(f"Erro ao carregar fonte Orbitron, usando fonte padrão")
         return pygame.font.SysFont(None, size)
 
-def get_background():
-    """Retorna a imagem de fundo redimensionada para a tela"""
+def get_background(image_name="fundodegrade.png"):
+    """Retorna a imagem de fundo ajustada para a tela (cover), sem esticar"""
+    path = os.path.join(_current_dir, 'assets', image_name)
     try:
-        bg = pygame.image.load(_background_path).convert()
-        return pygame.transform.scale(bg, (LARGURA_TELA, ALTURA_TELA))
+        bg = pygame.image.load(path).convert()
+        
+        # Lógica para "cover" (preencher sem distorcer)
+        bg_width = bg.get_width()
+        bg_height = bg.get_height()
+        
+        ratio_bg = bg_width / bg_height
+        ratio_screen = LARGURA_TELA / ALTURA_TELA
+        
+        if ratio_bg > ratio_screen:
+            # Imagem é mais larga que a tela: ajusta pela altura
+            new_height = ALTURA_TELA
+            new_width = int(new_height * ratio_bg)
+        else:
+            # Imagem é mais alta/estreita que a tela: ajusta pela largura
+            new_width = LARGURA_TELA
+            new_height = int(new_width / ratio_bg)
+            
+        bg = pygame.transform.smoothscale(bg, (new_width, new_height))
+        
+        # Centraliza a imagem recortada
+        final_surf = pygame.Surface((LARGURA_TELA, ALTURA_TELA))
+        offset_x = (new_width - LARGURA_TELA) // 2
+        offset_y = (new_height - ALTURA_TELA) // 2
+        
+        final_surf.blit(bg, (-offset_x, -offset_y))
+        return final_surf
+        
     except Exception as e:
-        print(f"Erro ao carregar fundo: {e}, usando cor sólida")
+        print(f"Erro ao carregar fundo {image_name}: {e}, usando cor sólida")
         fallback = pygame.Surface((LARGURA_TELA, ALTURA_TELA))
         fallback.fill(COR_FUNDO)
         return fallback

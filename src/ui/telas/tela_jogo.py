@@ -29,7 +29,7 @@ class TelaJogo:
         self.target_pos = (0, 0)
         self.animating = False
         self.animation_speed = 0.05 # Células por frame (ajustar para suavidade)
-        self.fundo = get_background()
+        self.fundo = get_background("background2.png")
 
     def _get_grid_coords(self, pos_logica):
         """Converte posição lógica (A/B ou x,y) para coordenadas x,y do grid"""

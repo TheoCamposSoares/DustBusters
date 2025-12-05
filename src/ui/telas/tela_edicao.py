@@ -26,7 +26,7 @@ class TelaEdicao:
         
         self.offset_x = 0
         self.offset_y = 0
-        self.fundo = get_background()
+        self.fundo = get_background("background2.png")
     
     def _load_sprites(self, cell_size):
         """Carrega sprites com o tamanho de célula especificado"""

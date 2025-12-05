@@ -29,7 +29,7 @@ class TelaFim:
         )
         
         self.fonte_grande = get_font(64)
-        self.fundo = get_background()
+        self.fundo = get_background("background4.png")
 
     def configurar(self, passos):
         self.passos_finais = passos
@@ -49,7 +49,7 @@ class TelaFim:
         rect_fim = texto_fim.get_rect(center=(LARGURA_TELA // 2, ALTURA_TELA // 2 - 100))
         superficie.blit(texto_fim, rect_fim)
         
-        texto_passos = self.fonte_grande.render(f"Total de Passos: {self.passos_finais}", True, COR_AGENTE)
+        texto_passos = self.fonte_grande.render(f"Total de Passos: {self.passos_finais}", True, COR_TEXTO)
         rect_passos = texto_passos.get_rect(center=(LARGURA_TELA // 2, ALTURA_TELA // 2 - 40))
         superficie.blit(texto_passos, rect_passos)
         

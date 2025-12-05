@@ -30,7 +30,7 @@ class TelaMenu:
         )
         
         self.fonte_titulo = get_font(64)
-        self.fundo = get_background()
+        self.fundo = get_background("background1.png")
 
     def processar_eventos(self, eventos):
         for evento in eventos:
