@@ -1,5 +1,6 @@
 from ..base_agent import AgenteBase
 from .planejador_aestrela import PlanejadorAEstrela
+from .heuristica import HeuristicaManhattan
 
 class AgenteBaseadoObjetivo(AgenteBase):
 
@@ -21,7 +22,12 @@ class AgenteBaseadoObjetivo(AgenteBase):
         sujeiras = percepcao.get("sujeiras_visiveis", [])
 
         if sujeiras and not self.caminho_atual:
-            self.destino_atual = sujeiras[0]
+            # Seleciona a sujeira mais próxima usando a heurística Manhattan
+            self.destino_atual = min(
+                sujeiras, 
+                key=lambda s: HeuristicaManhattan.calcular(self.posicao, s)
+            )
+            
             self.caminho_atual = self.planejador.buscar(
                 ambiente=self.ambiente,
                 inicio=self.posicao,
