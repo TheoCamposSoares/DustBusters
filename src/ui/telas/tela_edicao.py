@@ -61,7 +61,7 @@ class TelaEdicao:
 
 
         # Sprites de obstáculos (paredes antigas comentadas)
-        # self.sprite_obstaculo = load_sprite_proportional('parede.png', full_cell=True)  # Parede antiga
+        # self.sprite_obstaculo = load_sprite_proportional('parede.png', full_cell=True)  # Parede tijolin
         # self.sprite_obstaculo = load_sprite_proportional('paredenave.png', full_cell=True)  # Parede nave
         self.sprite_cadeira = load_sprite_proportional('spritecadeira.png', full_cell=True)
         self.sprite_mesa = load_sprite_proportional('spritemesa.png', full_cell=True)

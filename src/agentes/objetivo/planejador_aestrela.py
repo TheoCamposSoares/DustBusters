@@ -19,8 +19,6 @@ class PlanejadorAEstrela:
 
     def obter_vizinhos(self, ambiente, pos):
         return ambiente.obter_vizinhos(pos)
-        # Nosso ambiente tem q ter algo assim amiga:
-        # {"CIMA": (x,y), "BAIXO":..., ...} filtrando só posições válidas
 
     def buscar(self, ambiente, inicio, objetivo):
 

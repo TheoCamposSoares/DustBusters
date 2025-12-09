@@ -3,10 +3,10 @@ import pygame
 # Configurações de Tela
 LARGURA_TELA = 800
 ALTURA_TELA = 600
-TITULO_JANELA = "Aspirador Inteligente"
+TITULO_JANELA = "DustBusters"
 FPS = 60
 
-# Cores (Placeholders para futura estilização)
+# Cores
 BRANCO = (255, 255, 255)
 PRETO = (0, 0, 0)
 CINZA_CLARO = (200, 200, 200)
