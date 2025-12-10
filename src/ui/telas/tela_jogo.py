@@ -16,7 +16,7 @@ class TelaJogo:
         
         # Armazenar caminho dos assets
         base_path = os.path.dirname(__file__)
-        self.assets_path = os.path.join(base_path, '..', 'assets')
+        self.assets_path = os.path.join(base_path, '..', '..', '..', 'assets')
         
         # Sprites serão carregados em configurar()
         self.sprite_objetivo = None
