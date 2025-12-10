@@ -1,6 +1,6 @@
 from ..ambientes.ambiente_duas_salas import AmbienteDuasSalas
 from ..ambientes.grid import AmbienteGrid7x7
-from ..agentes.agente_simples import SimpleReflexAgent
+from ..agentes.simples.agente_simples import SimpleReflexAgent
 from ..agentes.objetivo.agente_objetivo import AgenteBaseadoObjetivo
 
 class SimulationEngine:

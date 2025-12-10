@@ -36,7 +36,7 @@ class AmbienteDuasSalas(AmbienteBase):
             agente.posicao = "A"
             sucesso = True
 
-        return sucesso
+        return sucesso, {"nova_posicao": agente.posicao}
 
     def estado_objetivo(self):
         """

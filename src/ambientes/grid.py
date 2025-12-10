@@ -32,16 +32,16 @@ class AmbienteGrid7x7(AmbienteBase):
         if acao == "LIMPAR":
             if pos_atual in self.sujeiras:
                 self.sujeiras.remove(pos_atual)
-            return True
+            return True, {"nova_posicao": agente.posicao}
 
         nova_pos = self.mover_posicao(pos_atual, acao)
 
         # Verifica se não há obstáculos ou se acabou o grid
         if self.sem_obstaculo(nova_pos):
             agente.posicao = nova_pos
-            return True
+            return True, {"nova_posicao": agente.posicao}
 
-        return False
+        return False, {"nova_posicao": agente.posicao}
 
     # Verifica se limpou todas as sujeiras do grid
     def estado_objetivo(self):
