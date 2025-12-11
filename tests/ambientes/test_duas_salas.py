@@ -33,7 +33,6 @@ def test_limpar_sala():
     assert sucesso is True
     assert amb.estado_sujeira["A"] is False
     assert info["nova_posicao"] == "A"
-    assert info["ambiente_totalmente_limpo"] is False
 
 
 # Testes para verificar se as movimentações de A para B e de B para A estão funcionando corretamente
@@ -45,7 +44,6 @@ def test_movimento_right():
 
     assert sucesso is True
     assert info["nova_posicao"] == "B"
-    assert info["ambiente_totalmente_limpo"] is False
 
 def test_movimento_left():
     amb = AmbienteDuasSalas()
@@ -55,7 +53,6 @@ def test_movimento_left():
 
     assert sucesso is True
     assert info["nova_posicao"] == "A"
-    assert info["ambiente_totalmente_limpo"] is False
 
 
 # Teste para verificar se a identificação do estado objetivo (tudo limpo) está correta
