@@ -61,6 +61,9 @@ pytest -v
 
 ## Resultados e Demonstração
 
+Link do vídeo de demonstração: [https://drive.google.com/file/d/18eh48RLn37wDWEy72Sl-OomLCu4aCRXM/view?usp=sharing](https://drive.google.com/file/d/18eh48RLn37wDWEy72Sl-OomLCu4aCRXM/view?usp=sharing)
+  
+Imagens das telas:
 ![Tela do menu](./assets/print_menu.png)
 ![Tela do jogo](./assets/print_simples.png)
 ![Tela do jogo](./assets/print_objetivo.png)
