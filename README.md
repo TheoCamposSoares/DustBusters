@@ -18,7 +18,7 @@ Diante disso, o presente trabalho tem como objetivo o desenvolvimento de uma pla
 ## Guia de Instalação e Execução
 
 ### 1. Instalação das Dependências
-Certifique-se de ter o **Python 3.12** instalado. Clone o repositório e instale as bibliotecas listadas no `requirements.txt`:
+Certifique-se de ter o **Python 3.12** instalado ([https://www.python.org/downloads/](https://www.python.org/downloads/)). Clone o repositório e instale as bibliotecas listadas no `requirements.txt`:
 
 ```bash
 # Clone o repositório
